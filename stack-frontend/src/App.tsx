@@ -4,10 +4,16 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { LoadingPage } from './components/LoadingSpinner';
 import { HomePage } from './pages/HomePage';
+import { QuestionsPage } from './pages/QuestionsPage';
 import { AskQuestionPage } from './pages/AskQuestionPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { QuestionDetailPage } from './pages/QuestionDetailPage';
+import { TagsPage } from './pages/TagsPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
+import { UserProfilePage } from './pages/UserProfilePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Protected Route component
@@ -43,7 +49,11 @@ const AppRoutes = () => {
             <Layout>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/questions" element={<HomePage />} />
+                <Route path="/questions" element={<QuestionsPage />} />
+                <Route path="/questions/:id" element={<QuestionDetailPage />} />
+                <Route path="/tags" element={<TagsPage />} />
+                <Route path="/search" element={<SearchResultsPage />} />
+                <Route path="/users/:id" element={<UserProfilePage />} />
                 <Route 
                   path="/ask" 
                   element={
@@ -52,12 +62,16 @@ const AppRoutes = () => {
                     </ProtectedRoute>
                   } 
                 />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                
-                {/* Add more routes here as we create them */}
-                <Route path="/questions/:id" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Question Detail Page</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
-                <Route path="/tags" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Tags Page</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
                 <Route 
                   path="/admin" 
                   element={
@@ -66,9 +80,6 @@ const AppRoutes = () => {
                     </ProtectedRoute>
                   } 
                 />
-                <Route path="/search" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Search Results</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
-                <Route path="/users/:id" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">User Profile</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
-                <Route path="/settings" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Settings</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
                 
                 {/* Catch all route */}
                 <Route path="*" element={<Navigate to="/" replace />} />

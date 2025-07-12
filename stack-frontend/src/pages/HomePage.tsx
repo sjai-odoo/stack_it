@@ -21,12 +21,51 @@ export const HomePage = () => {
     setIsLoading(true);
     try {
       const response = await apiService.getQuestions(filters);
-      if (response.data && Array.isArray(response.data.data)) {
-        setQuestions(response.data.data);
-      } else {
-        console.error('Invalid response format:', response);
-        setQuestions([]);
+      console.log('API Response:', response); // Debug log
+      
+      // Handle different response formats
+      let questionsData: Question[] = [];
+      if (response.data) {
+        // Cast to any to handle different response formats from backend
+        const responseData = response.data as any;
+        
+        if (Array.isArray(responseData.data)) {
+          // Format: { data: { data: [...] } }
+          questionsData = responseData.data;
+        } else if (Array.isArray(responseData.questions)) {
+          // Format: { data: { questions: [...] } }
+          questionsData = responseData.questions;
+        } else if (Array.isArray(responseData)) {
+          // Format: { data: [...] }
+          questionsData = responseData;
+        }
       }
+      
+      // Clean and validate questions data
+      const cleanedQuestions = questionsData.map(question => {
+        const q = question as any; // Cast to handle different backend formats
+        return {
+          ...question,
+          id: q.id || q._id || Math.random().toString(36).substr(2, 9),
+          title: question.title || 'Untitled Question',
+          content: question.content || '',
+          tags: Array.isArray(question.tags) ? question.tags.filter(tag => tag && (tag.name || typeof tag === 'string')).map(tag => {
+            if (typeof tag === 'string') {
+              return { id: tag, name: tag, questionCount: 0 };
+            }
+            return tag;
+          }) : [],
+          author: question.author || { id: 'unknown', username: 'Unknown', email: '', reputation: 0, role: 'user' as const, createdAt: new Date().toISOString() },
+          votes: question.votes || 0,
+          views: question.views || 0,
+          answers: question.answers || [],
+          createdAt: question.createdAt || new Date().toISOString(),
+          updatedAt: question.updatedAt || new Date().toISOString(),
+          isClosed: question.isClosed || false,
+        };
+      });
+      
+      setQuestions(cleanedQuestions);
     } catch (error) {
       console.error('Failed to fetch questions:', error);
       setQuestions([]);
@@ -229,9 +268,9 @@ export const HomePage = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(question.tags && question.tags.length > 0) ? question.tags.map((tag) => (
+                  {(question.tags && question.tags.length > 0) ? question.tags.filter(tag => tag && tag.name).map((tag) => (
                     <Link
-                      key={tag.id}
+                      key={tag.id || tag.name}
                       to={`/tags/${tag.name}`}
                       className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 hover:bg-primary-200 dark:hover:bg-primary-800 transition-all duration-200 hover:scale-105"
                     >

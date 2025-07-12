@@ -185,6 +185,22 @@ class ApiService {
     return response.data;
   }
 
+  // Bookmark endpoints
+  async bookmarkQuestion(id: string): Promise<ApiResponse<void>> {
+    const response = await this.api.post(`/questions/${id}/bookmark`);
+    return response.data;
+  }
+
+  async unbookmarkQuestion(id: string): Promise<ApiResponse<void>> {
+    const response = await this.api.delete(`/questions/${id}/bookmark`);
+    return response.data;
+  }
+
+  async getBookmarkedQuestions(): Promise<ApiResponse<Question[]>> {
+    const response = await this.api.get('/bookmarks');
+    return response.data;
+  }
+
   // Search endpoints
   async searchQuestions(query: string, filters?: QuestionFilters): Promise<ApiResponse<PaginatedResponse<Question>>> {
     const response = await this.api.get('/search/questions', { 
