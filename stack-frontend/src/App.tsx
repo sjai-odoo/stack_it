@@ -6,6 +6,7 @@ import { AskQuestionPage } from './pages/AskQuestionPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,40 +40,42 @@ const AppRoutes = () => {
   return (
     <Router>
       <AuthProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/questions" element={<HomePage />} />
-            <Route 
-              path="/ask" 
-              element={
-                <ProtectedRoute>
-                  <AskQuestionPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            
-            {/* Add more routes here as we create them */}
-            <Route path="/questions/:id" element={<div>Question Detail Page (Coming Soon)</div>} />
-            <Route path="/tags" element={<div>Tags Page (Coming Soon)</div>} />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/search" element={<div>Search Results (Coming Soon)</div>} />
-            <Route path="/users/:id" element={<div>User Profile (Coming Soon)</div>} />
-            <Route path="/settings" element={<div>Settings (Coming Soon)</div>} />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Layout>
+        <ErrorBoundary>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/questions" element={<HomePage />} />
+              <Route 
+                path="/ask" 
+                element={
+                  <ProtectedRoute>
+                    <AskQuestionPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              
+              {/* Add more routes here as we create them */}
+              <Route path="/questions/:id" element={<div>Question Detail Page (Coming Soon)</div>} />
+              <Route path="/tags" element={<div>Tags Page (Coming Soon)</div>} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/search" element={<div>Search Results (Coming Soon)</div>} />
+              <Route path="/users/:id" element={<div>User Profile (Coming Soon)</div>} />
+              <Route path="/settings" element={<div>Settings (Coming Soon)</div>} />
+              
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+        </ErrorBoundary>
       </AuthProvider>
     </Router>
   );

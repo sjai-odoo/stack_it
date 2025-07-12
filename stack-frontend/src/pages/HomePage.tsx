@@ -21,9 +21,15 @@ export const HomePage = () => {
     setIsLoading(true);
     try {
       const response = await apiService.getQuestions(filters);
-      setQuestions(response.data.data);
+      if (response.data && Array.isArray(response.data.data)) {
+        setQuestions(response.data.data);
+      } else {
+        console.error('Invalid response format:', response);
+        setQuestions([]);
+      }
     } catch (error) {
       console.error('Failed to fetch questions:', error);
+      setQuestions([]);
     } finally {
       setIsLoading(false);
     }
@@ -34,14 +40,22 @@ export const HomePage = () => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      const now = new Date();
+      const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+      
+      if (diffInHours < 1) return 'Just now';
+      if (diffInHours < 24) return `${diffInHours}h ago`;
+      if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const getVoteColor = (votes: number) => {
@@ -122,18 +136,18 @@ export const HomePage = () => {
             <div className="flex space-x-4">
               {/* Stats */}
               <div className="flex flex-col items-center space-y-2 min-w-[80px]">
-                <div className={`text-lg font-semibold ${getVoteColor(question.votes)}`}>
-                  {question.votes}
+                <div className={`text-lg font-semibold ${getVoteColor(question.votes || 0)}`}>
+                  {question.votes || 0}
                 </div>
                 <div className="text-xs text-gray-500">votes</div>
                 
                 <div className="text-lg font-semibold text-gray-700">
-                  {question.answers.length}
+                  {(question.answers && question.answers.length) || 0}
                 </div>
                 <div className="text-xs text-gray-500">answers</div>
                 
                 <div className="text-sm font-semibold text-gray-700">
-                  {question.views}
+                  {question.views || 0}
                 </div>
                 <div className="text-xs text-gray-500">views</div>
               </div>
@@ -144,16 +158,16 @@ export const HomePage = () => {
                   to={`/questions/${question.id}`}
                   className="text-lg font-medium text-gray-900 hover:text-primary-600 line-clamp-2"
                 >
-                  {question.title}
+                  {question.title || 'Untitled Question'}
                 </Link>
                 
                 <div className="mt-2 text-sm text-gray-600 line-clamp-2">
-                  {question.content.replace(/<[^>]*>/g, '').substring(0, 200)}...
+                  {question.content ? question.content.replace(/<[^>]*>/g, '').substring(0, 200) + '...' : 'No content available'}
                 </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {question.tags.map((tag) => (
+                  {(question.tags && question.tags.length > 0) ? question.tags.map((tag) => (
                     <Link
                       key={tag.id}
                       to={`/tags/${tag.name}`}
@@ -162,7 +176,9 @@ export const HomePage = () => {
                       <TagIcon className="w-3 h-3 mr-1" />
                       {tag.name}
                     </Link>
-                  ))}
+                  )) : (
+                    <span className="text-xs text-gray-500">No tags</span>
+                  )}
                 </div>
 
                 {/* Meta */}
@@ -170,26 +186,26 @@ export const HomePage = () => {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-1">
                       <Clock className="w-4 h-4" />
-                      <span>{formatDate(question.createdAt)}</span>
+                      <span>{formatDate(question.createdAt || new Date().toISOString())}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <MessageSquare className="w-4 h-4" />
-                      <span>{question.answers.length} answers</span>
+                      <span>{(question.answers && question.answers.length) || 0} answers</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Eye className="w-4 h-4" />
-                      <span>{question.views} views</span>
+                      <span>{question.views || 0} views</span>
                     </div>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-medium">
-                        {question.author.username.charAt(0).toUpperCase()}
+                        {question.author?.username?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
                     <span className="font-medium text-gray-700">
-                      {question.author.username}
+                      {question.author?.username || 'Unknown User'}
                     </span>
                   </div>
                 </div>
