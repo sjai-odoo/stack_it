@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  }
+  
+  .btn-outline {
+    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+  }
+  
+  .input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  }
+  
+  .textarea {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-vertical;
+  }
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  @apply min-h-[200px] p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+}
+
+.ProseMirror:focus {
+  @apply outline-none;
+}
+
+.ProseMirror p {
+  @apply mb-2;
+}
+
+.ProseMirror h1 {
+  @apply text-2xl font-bold mb-4;
+}
+
+.ProseMirror h2 {
+  @apply text-xl font-bold mb-3;
+}
+
+.ProseMirror h3 {
+  @apply text-lg font-bold mb-2;
+}
+
+.ProseMirror ul {
+  @apply list-disc list-inside mb-2;
+}
+
+.ProseMirror ol {
+  @apply list-decimal list-inside mb-2;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600;
+}
+
+.ProseMirror code {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.ProseMirror pre {
+  @apply bg-gray-100 p-4 rounded-lg overflow-x-auto;
+}
+
+.ProseMirror pre code {
+  @apply bg-transparent p-0;
+}
+
+.ProseMirror a {
+  @apply text-primary-600 hover:text-primary-700 underline;
+}
+
+.ProseMirror img {
+  @apply max-w-full h-auto rounded;
+}
+
+/* Mention styles */
+.mention {
+  @apply bg-primary-100 text-primary-800 px-1 py-0.5 rounded text-sm font-medium;
+}
