@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Header';
+import { LoadingPage } from './components/LoadingSpinner';
 import { HomePage } from './pages/HomePage';
 import { AskQuestionPage } from './pages/AskQuestionPage';
 import { LoginPage } from './pages/LoginPage';
@@ -13,11 +15,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <LoadingPage title="Authenticating..." description="Verifying your credentials" />;
   }
   
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
@@ -28,9 +26,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       {isAuthenticated && <Header />}
-      <main>{children}</main>
+      <main className="page-transition">{children}</main>
     </div>
   );
 };
@@ -39,44 +37,46 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <Router>
-      <AuthProvider>
-        <ErrorBoundary>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/questions" element={<HomePage />} />
-              <Route 
-                path="/ask" 
-                element={
-                  <ProtectedRoute>
-                    <AskQuestionPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              
-              {/* Add more routes here as we create them */}
-              <Route path="/questions/:id" element={<div>Question Detail Page (Coming Soon)</div>} />
-              <Route path="/tags" element={<div>Tags Page (Coming Soon)</div>} />
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/search" element={<div>Search Results (Coming Soon)</div>} />
-              <Route path="/users/:id" element={<div>User Profile (Coming Soon)</div>} />
-              <Route path="/settings" element={<div>Settings (Coming Soon)</div>} />
-              
-              {/* Catch all route */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Layout>
-        </ErrorBoundary>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ErrorBoundary>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/questions" element={<HomePage />} />
+                <Route 
+                  path="/ask" 
+                  element={
+                    <ProtectedRoute>
+                      <AskQuestionPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                
+                {/* Add more routes here as we create them */}
+                <Route path="/questions/:id" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Question Detail Page</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
+                <Route path="/tags" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Tags Page</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/search" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Search Results</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
+                <Route path="/users/:id" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">User Profile</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
+                <Route path="/settings" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Settings</h1><p className="text-gray-600 dark:text-gray-400">Coming Soon</p></div></div>} />
+                
+                {/* Catch all route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Layout>
+          </ErrorBoundary>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 };

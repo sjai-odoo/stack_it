@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-✅ **Server running on:** `http://localhost:3000`  
+✅ **Server running on:** `http://localhost:3001`  
 ✅ **Default admin:** `admin@stackit.com` / `admin123`
 
 ### 2. **Frontend (30 seconds)**
@@ -103,11 +103,13 @@ All endpoints work perfectly:
 
 ## 🚨 **If You Get Errors**
 
-1. **Port 3000 busy?**
+1. **Port already in use?**
    ```bash
    taskkill /f /im node.exe
    npm run dev
    ```
+   
+   **Note:** The server now runs on port 3001 to avoid conflicts.
 
 2. **Module not found?**
    ```bash
