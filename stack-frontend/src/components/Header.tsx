@@ -34,7 +34,7 @@ export const Header = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-primary-600 to-primary-400 rounded-lg flex items-center justify-center shadow-soft">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gradient">StackClone</span>
+              <span className="text-xl font-bold text-gradient">StackIt</span>
             </Link>
           </div>
 
@@ -119,14 +119,14 @@ export const Header = () => {
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-strong border border-gray-200 dark:border-gray-700 z-50 animate-scale-in">
                       <div className="py-1">
-                        <Link
+                        {/* <Link
                           to={`/users/${user.id}`}
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <User className="w-4 h-4 mr-3" />
                           Profile
-                        </Link>
+                        </Link> */}
                         <Link
                           to="/settings"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"

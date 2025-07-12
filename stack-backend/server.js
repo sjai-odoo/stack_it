@@ -176,7 +176,10 @@ const generateToken = (userId) => {
 const sanitizeUser = (user) => {
   const userObj = user.toObject ? user.toObject() : user;
   const { password, ...userWithoutPassword } = userObj;
-  return userWithoutPassword;
+  return {
+    ...userWithoutPassword,
+    id: userWithoutPassword._id || userWithoutPassword.id
+  };
 };
 
 // Auth middleware
@@ -446,7 +449,10 @@ app.get('/api/questions', async (req, res) => {
     const questionsWithAuthors = questions.map(q => ({
       ...q.toObject(),
       id: q._id,
-      author: q.authorId
+      author: {
+        ...q.authorId.toObject(),
+        id: q.authorId._id
+      }
     }));
 
     res.json({
@@ -492,7 +498,10 @@ app.post('/api/questions', authenticateToken, async (req, res) => {
     const questionWithAuthor = {
       ...newQuestion.toObject(),
       id: newQuestion._id,
-      author: newQuestion.authorId
+      author: {
+        ...newQuestion.authorId.toObject(),
+        id: newQuestion.authorId._id
+      }
     };
 
     res.status(201).json({
@@ -521,13 +530,65 @@ app.get('/api/questions/:id', async (req, res) => {
       return res.status(404).json({ message: 'Question not found' });
     }
 
+    // Get comments for this question
+    const questionComments = await Comment.find({ 
+      parentId: question._id, 
+      parentType: 'question' 
+    }).populate('authorId', 'username email avatar reputation');
+
+    // Get comments for all answers
+    const answerIds = question.answers.map(answer => answer._id);
+    const answerComments = await Comment.find({ 
+      parentId: { $in: answerIds }, 
+      parentType: 'answer' 
+    }).populate('authorId', 'username email avatar reputation');
+
     // Increment view count
     await Question.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+
+    // Format comments with proper structure
+    const formattedQuestionComments = questionComments.map(comment => ({
+      ...comment.toObject(),
+      id: comment._id,
+      author: {
+        ...comment.authorId.toObject(),
+        id: comment.authorId._id
+      },
+      questionId: comment.parentId,
+      answerId: undefined
+    }));
+
+    const formattedAnswerComments = answerComments.map(comment => ({
+      ...comment.toObject(),
+      id: comment._id,
+      author: {
+        ...comment.authorId.toObject(),
+        id: comment.authorId._id
+      },
+      questionId: undefined,
+      answerId: comment.parentId
+    }));
+
+    // Add comments to answers
+    const answersWithComments = question.answers.map(answer => ({
+      ...answer.toObject(),
+      id: answer._id,
+      author: {
+        ...answer.authorId.toObject(),
+        id: answer.authorId._id
+      },
+      comments: formattedAnswerComments.filter(comment => comment.answerId?.toString() === answer._id.toString())
+    }));
 
     const questionWithAuthor = {
       ...question.toObject(),
       id: question._id,
-      author: question.authorId
+      author: {
+        ...question.authorId.toObject(),
+        id: question.authorId._id
+      },
+      answers: answersWithComments,
+      comments: formattedQuestionComments
     };
 
     res.json({
@@ -573,7 +634,10 @@ app.get('/api/search/questions', async (req, res) => {
     const questionsWithAuthors = questions.map(q => ({
       ...q.toObject(),
       id: q._id,
-      author: q.authorId
+      author: {
+        ...q.authorId.toObject(),
+        id: q.authorId._id
+      }
     }));
 
     res.json({
@@ -597,11 +661,22 @@ app.get('/api/search/questions', async (req, res) => {
 // Users routes
 app.get('/api/users/:id', async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const userId = req.params.id;
+    console.log('Fetching user with ID:', userId);
+    
+    // Check if ID is valid MongoDB ObjectId format
+    if (!userId || userId.length !== 24) {
+      console.log('Invalid user ID format:', userId);
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    const user = await User.findById(userId);
     if (!user) {
+      console.log('User not found in database:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('User found:', user.username);
     res.json({
       success: true,
       data: sanitizeUser(user)
@@ -647,11 +722,220 @@ app.post('/api/questions/:id/answers', authenticateToken, async (req, res) => {
       data: {
         ...newAnswer.toObject(),
         id: newAnswer._id,
-        author: newAnswer.authorId
+        author: {
+          ...newAnswer.authorId.toObject(),
+          id: newAnswer.authorId._id
+        }
       }
     });
   } catch (error) {
     console.error('Create answer error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Accept answer
+app.post('/api/answers/:id/accept', authenticateToken, async (req, res) => {
+  try {
+    const answerId = req.params.id;
+    const answer = await Answer.findById(answerId).populate('questionId');
+    
+    if (!answer) {
+      return res.status(404).json({ message: 'Answer not found' });
+    }
+
+    // Check if user is the question author
+    if (answer.questionId.authorId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only question author can accept answers' });
+    }
+
+    // Unaccept all other answers for this question
+    await Answer.updateMany(
+      { questionId: answer.questionId._id }, 
+      { isAccepted: false }
+    );
+
+    // Accept this answer
+    await Answer.findByIdAndUpdate(answerId, { isAccepted: true });
+
+    // Update question's accepted answer
+    await Question.findByIdAndUpdate(answer.questionId._id, { 
+      acceptedAnswerId: answerId 
+    });
+
+    res.json({
+      success: true,
+      data: { message: 'Answer accepted successfully' }
+    });
+  } catch (error) {
+    console.error('Accept answer error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Comments routes
+app.post('/api/comments', authenticateToken, async (req, res) => {
+  try {
+    const { content, questionId, answerId } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ message: 'Content is required' });
+    }
+
+    let parentId, parentType;
+    if (questionId) {
+      parentId = questionId;
+      parentType = 'question';
+      // Verify question exists
+      const question = await Question.findById(questionId);
+      if (!question) {
+        return res.status(404).json({ message: 'Question not found' });
+      }
+    } else if (answerId) {
+      parentId = answerId;
+      parentType = 'answer';
+      // Verify answer exists
+      const answer = await Answer.findById(answerId);
+      if (!answer) {
+        return res.status(404).json({ message: 'Answer not found' });
+      }
+    } else {
+      return res.status(400).json({ message: 'Either questionId or answerId is required' });
+    }
+
+    const newComment = await Comment.create({
+      content,
+      authorId: req.user._id,
+      parentId,
+      parentType,
+      votes: 0
+    });
+
+    await newComment.populate('authorId', 'username email avatar reputation');
+
+    res.status(201).json({
+      success: true,
+      data: {
+        ...newComment.toObject(),
+        id: newComment._id,
+        author: newComment.authorId,
+        questionId: parentType === 'question' ? parentId : undefined,
+        answerId: parentType === 'answer' ? parentId : undefined
+      }
+    });
+  } catch (error) {
+    console.error('Create comment error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Vote routes
+app.post('/api/questions/:id/vote', authenticateToken, async (req, res) => {
+  try {
+    const { vote } = req.body;
+    const questionId = req.params.id;
+
+    if (vote !== 1 && vote !== -1) {
+      return res.status(400).json({ message: 'Vote must be 1 or -1' });
+    }
+
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    // Update vote count
+    await Question.findByIdAndUpdate(questionId, {
+      $inc: { votes: vote }
+    });
+
+    const updatedQuestion = await Question.findById(questionId)
+      .populate('authorId', 'username email avatar reputation');
+
+    res.json({
+      success: true,
+      data: {
+        ...updatedQuestion.toObject(),
+        id: updatedQuestion._id,
+        author: updatedQuestion.authorId
+      }
+    });
+  } catch (error) {
+    console.error('Vote question error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/answers/:id/vote', authenticateToken, async (req, res) => {
+  try {
+    const { vote } = req.body;
+    const answerId = req.params.id;
+
+    if (vote !== 1 && vote !== -1) {
+      return res.status(400).json({ message: 'Vote must be 1 or -1' });
+    }
+
+    const answer = await Answer.findById(answerId);
+    if (!answer) {
+      return res.status(404).json({ message: 'Answer not found' });
+    }
+
+    // Update vote count
+    await Answer.findByIdAndUpdate(answerId, {
+      $inc: { votes: vote }
+    });
+
+    const updatedAnswer = await Answer.findById(answerId)
+      .populate('authorId', 'username email avatar reputation');
+
+    res.json({
+      success: true,
+      data: {
+        ...updatedAnswer.toObject(),
+        id: updatedAnswer._id,
+        author: updatedAnswer.authorId
+      }
+    });
+  } catch (error) {
+    console.error('Vote answer error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/comments/:id/vote', authenticateToken, async (req, res) => {
+  try {
+    const { vote } = req.body;
+    const commentId = req.params.id;
+
+    if (vote !== 1 && vote !== -1) {
+      return res.status(400).json({ message: 'Vote must be 1 or -1' });
+    }
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Update vote count
+    await Comment.findByIdAndUpdate(commentId, {
+      $inc: { votes: vote }
+    });
+
+    const updatedComment = await Comment.findById(commentId)
+      .populate('authorId', 'username email avatar reputation');
+
+    res.json({
+      success: true,
+      data: {
+        ...updatedComment.toObject(),
+        id: updatedComment._id,
+        author: updatedComment.authorId,
+        questionId: updatedComment.parentType === 'question' ? updatedComment.parentId : undefined,
+        answerId: updatedComment.parentType === 'answer' ? updatedComment.parentId : undefined
+      }
+    });
+  } catch (error) {
+    console.error('Vote comment error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

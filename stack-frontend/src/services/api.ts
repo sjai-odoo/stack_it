@@ -208,6 +208,44 @@ class ApiService {
     });
     return response.data;
   }
+
+  // Admin endpoints
+  async getUsers(): Promise<ApiResponse<User[]>> {
+    const response = await this.api.get('/admin/users');
+    return response.data;
+  }
+
+  async banUser(id: string): Promise<ApiResponse<void>> {
+    const response = await this.api.post(`/admin/users/${id}/ban`);
+    return response.data;
+  }
+
+  async unbanUser(id: string): Promise<ApiResponse<void>> {
+    const response = await this.api.post(`/admin/users/${id}/unban`);
+    return response.data;
+  }
+
+  async resolveReport(id: string, action: 'resolve' | 'dismiss'): Promise<ApiResponse<void>> {
+    const response = await this.api.post(`/admin/reports/${id}/${action}`);
+    return response.data;
+  }
+
+  async createPlatformMessage(data: any): Promise<ApiResponse<any>> {
+    const response = await this.api.post('/admin/platform-messages', data);
+    return response.data;
+  }
+
+  async togglePlatformMessage(id: string, isActive: boolean): Promise<ApiResponse<void>> {
+    const response = await this.api.put(`/admin/platform-messages/${id}/toggle`, { isActive });
+    return response.data;
+  }
+
+  async exportData(dataType: 'users' | 'questions' | 'reports'): Promise<any> {
+    const response = await this.api.get(`/admin/export/${dataType}`, {
+      responseType: 'blob'
+    });
+    return response;
+  }
 }
 
 export const apiService = new ApiService();

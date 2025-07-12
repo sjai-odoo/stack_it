@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Tag as TagIcon, TrendingUp, Hash, Filter, Grid, List } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Pagination } from '../components/Pagination';
 import type { Tag } from '../types';
 import apiService from '../services/api';
 
@@ -9,12 +10,18 @@ export const TagsPage = () => {
   const navigate = useNavigate();
   const [tags, setTags] = useState<Tag[]>([]);
   const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
+  const [displayedTags, setDisplayedTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'popularity' | 'newest'>('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [error, setError] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchTags();
@@ -23,6 +30,10 @@ export const TagsPage = () => {
   useEffect(() => {
     filterAndSortTags();
   }, [tags, searchQuery, sortBy, selectedCategory]);
+
+  useEffect(() => {
+    paginateTags();
+  }, [filteredTags, currentPage, itemsPerPage]);
 
   const fetchTags = async () => {
     try {
@@ -81,6 +92,30 @@ export const TagsPage = () => {
     });
 
     setFilteredTags(filtered);
+    
+    // Reset to first page when filters change
+    setCurrentPage(1);
+    
+    // Calculate total pages
+    const totalPagesCount = Math.ceil(filtered.length / itemsPerPage);
+    setTotalPages(totalPagesCount);
+  };
+
+  const paginateTags = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedTags = filteredTags.slice(startIndex, endIndex);
+    setDisplayedTags(paginatedTags);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
   };
 
   const getTagColor = (tag: Tag) => {
@@ -259,7 +294,7 @@ export const TagsPage = () => {
       {/* Tags Grid/List */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredTags.map((tag, index) => (
+          {displayedTags.map((tag, index) => (
             <Link
               key={tag.id}
               to={`/tags/${tag.name}`}
@@ -288,7 +323,7 @@ export const TagsPage = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredTags.map((tag, index) => (
+          {displayedTags.map((tag, index) => (
             <Link
               key={tag.id}
               to={`/tags/${tag.name}`}
@@ -341,6 +376,24 @@ export const TagsPage = () => {
               Clear Search
             </button>
           )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredTags.length > 0 && (
+        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredTags.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            itemName="tag"
+            itemNamePlural="tags"
+            showGoToPage={totalPages > 5}
+            itemsPerPageOptions={[10, 20, 50, 100]}
+          />
         </div>
       )}
     </div>

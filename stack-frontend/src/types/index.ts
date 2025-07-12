@@ -4,7 +4,7 @@ export interface User {
   email: string;
   avatar?: string;
   reputation: number;
-  role: 'user' | 'moderator' | 'admin';
+  role: 'user' | 'moderator' | 'admin' | 'banned';
   createdAt: string;
   bio?: string;
 }
@@ -26,6 +26,7 @@ export interface Question {
   votes: number;
   views: number;
   answers: Answer[];
+  comments: Comment[];
   acceptedAnswerId?: string;
   createdAt: string;
   updatedAt: string;

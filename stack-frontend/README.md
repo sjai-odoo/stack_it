@@ -1,6 +1,6 @@
-# Stack Overflow Clone - Frontend
+# StackIt - Frontend
 
-A modern, responsive Stack Overflow clone built with React, TypeScript, Vite, and Tailwind CSS.
+A modern, responsive Q&A platform built with React, TypeScript, Vite, and Tailwind CSS.
 
 ## Features
 
@@ -74,7 +74,7 @@ A modern, responsive Stack Overflow clone built with React, TypeScript, Vite, an
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd stack-frontend
+cd stackit-frontend
 ```
 
 2. Install dependencies:

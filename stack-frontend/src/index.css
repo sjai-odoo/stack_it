@@ -4,26 +4,64 @@
 
 @layer base {
   * {
-    @apply transition-colors duration-300 ease-in-out;
+    @apply transition-colors duration-200 ease-in-out;
   }
   
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   body {
-    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
-    @apply transition-colors duration-300 ease-in-out;
+    @apply bg-medium-bg dark:bg-dark-bg text-medium-text dark:text-dark-text;
+    @apply transition-colors duration-200 ease-in-out;
+    font-size: 17px;
+    line-height: 1.58;
+    letter-spacing: -0.003em;
   }
   
-  /* Custom scrollbar */
+  /* Medium-inspired typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-weight: 700;
+    color: #242424;
+    @apply dark:text-dark-text;
+  }
+  
+  h1 {
+    @apply text-title-xl leading-tight mb-6;
+  }
+  
+  h2 {
+    @apply text-title-lg leading-tight mb-5;
+  }
+  
+  h3 {
+    @apply text-title-base leading-tight mb-4;
+  }
+  
+  h4 {
+    @apply text-title-sm leading-tight mb-3;
+  }
+  
+  p {
+    @apply text-article-base text-medium-text dark:text-dark-text-light mb-4;
+  }
+  
+  a {
+    @apply text-medium-green hover:text-medium-green-dark dark:text-primary-400 dark:hover:text-primary-300;
+    @apply transition-colors duration-150;
+  }
+  
+  /* Custom scrollbar - Medium style */
   ::-webkit-scrollbar {
-    @apply w-2;
+    @apply w-1;
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
+    @apply bg-transparent;
   }
   
   ::-webkit-scrollbar-thumb {
@@ -36,89 +74,173 @@
 }
 
 @layer components {
+  /* Medium-inspired buttons */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 ease-in-out transform hover:scale-105 focus:scale-105;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-150 ease-in-out;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    font-size: 14px;
+    line-height: 1.4;
+    letter-spacing: -0.003em;
   }
   
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
-    @apply shadow-soft hover:shadow-medium;
+    @apply bg-medium-green text-white hover:bg-medium-green-dark;
+    @apply focus:ring-medium-green dark:focus:ring-offset-dark-bg;
+    @apply shadow-button hover:shadow-button-hover;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
-    @apply shadow-soft hover:shadow-medium;
+    @apply bg-gray-100 dark:bg-dark-bg-gray text-medium-text dark:text-dark-text;
+    @apply hover:bg-gray-200 dark:hover:bg-gray-700;
+    @apply focus:ring-gray-300 dark:focus:ring-gray-600 dark:focus:ring-offset-dark-bg;
+    @apply shadow-button hover:shadow-button-hover;
   }
   
   .btn-outline {
-    @apply border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
-    @apply shadow-soft hover:shadow-medium;
+    @apply border border-gray-200 dark:border-gray-700 bg-transparent;
+    @apply text-medium-text dark:text-dark-text hover:bg-medium-bg-light dark:hover:bg-dark-bg-light;
+    @apply focus:ring-medium-green dark:focus:ring-offset-dark-bg;
+    @apply shadow-button hover:shadow-button-hover;
   }
   
+  .btn-ghost {
+    @apply text-medium-text-light dark:text-dark-text-light hover:text-medium-text dark:hover:text-dark-text;
+    @apply hover:bg-medium-bg-light dark:hover:bg-dark-bg-light;
+    @apply focus:ring-gray-300 dark:focus:ring-gray-600 dark:focus:ring-offset-dark-bg;
+  }
+  
+  /* Medium-inspired cards */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-soft border border-gray-200 dark:border-gray-700;
-    @apply hover:shadow-medium transition-all duration-300 ease-in-out;
+    @apply bg-white dark:bg-dark-bg-light rounded-lg border border-gray-200 dark:border-gray-700;
+    @apply shadow-card hover:shadow-card-hover transition-shadow duration-150;
+  }
+  
+  .card-minimal {
+    @apply bg-white dark:bg-dark-bg border-b border-gray-200 dark:border-gray-700;
+    @apply hover:bg-medium-bg-light dark:hover:bg-dark-bg-light transition-colors duration-150;
   }
   
   .card-interactive {
-    @apply card hover:scale-[1.02] hover:shadow-strong;
+    @apply bg-white dark:bg-dark-bg-light rounded-lg border border-gray-200 dark:border-gray-700;
+    @apply shadow-card hover:shadow-card-hover transition-all duration-200;
+    @apply hover:scale-[1.01] hover:border-primary-200 dark:hover:border-primary-700;
+    @apply cursor-pointer;
   }
   
+  /* Medium-inspired inputs */
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:focus:border-primary-500;
-    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400;
-    @apply transition-all duration-200 ease-in-out;
+    @apply w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg;
+    @apply focus:ring-2 focus:ring-medium-green focus:border-medium-green dark:focus:border-medium-green;
+    @apply bg-white dark:bg-dark-bg-light text-medium-text dark:text-dark-text;
+    @apply placeholder-medium-text-lighter dark:placeholder-dark-text-lighter;
+    @apply transition-all duration-150 ease-in-out;
+    font-size: 16px;
+    line-height: 1.4;
   }
   
   .textarea {
-    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:focus:border-primary-500 resize-y;
-    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400;
-    @apply transition-all duration-200 ease-in-out;
+    @apply w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg resize-y;
+    @apply focus:ring-2 focus:ring-medium-green focus:border-medium-green dark:focus:border-medium-green;
+    @apply bg-white dark:bg-dark-bg-light text-medium-text dark:text-dark-text;
+    @apply placeholder-medium-text-lighter dark:placeholder-dark-text-lighter;
+    @apply transition-all duration-150 ease-in-out;
+    font-size: 16px;
+    line-height: 1.5;
   }
   
-  .glass {
-    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50;
+  /* Medium-inspired content containers */
+  .content-container {
+    @apply max-w-reading mx-auto px-6;
   }
   
-  .gradient-bg {
-    @apply bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900;
+  .article-container {
+    @apply max-w-article mx-auto px-6;
   }
   
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent;
+  .wide-container {
+    @apply max-w-content mx-auto px-6;
   }
   
-  /* Loading animations */
+  /* Medium-inspired navigation */
+  .nav-item {
+    @apply text-medium-text-light dark:text-dark-text-light hover:text-medium-text dark:hover:text-dark-text;
+    @apply transition-colors duration-150;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  
+  .nav-item-active {
+    @apply text-medium-text dark:text-dark-text font-medium;
+  }
+  
+  /* Medium-inspired tags */
+  .tag {
+    @apply bg-medium-bg-gray dark:bg-dark-bg-gray text-medium-text-light dark:text-dark-text-light;
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+    @apply hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-150;
+  }
+  
+  .tag-active {
+    @apply bg-medium-green text-white;
+  }
+  
+  /* Medium-inspired voting buttons */
+  .vote-btn {
+    @apply w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150;
+    @apply text-medium-text-light dark:text-dark-text-light hover:text-medium-text dark:hover:text-dark-text;
+    @apply hover:bg-medium-bg-light dark:hover:bg-dark-bg-light;
+  }
+  
+  .vote-btn-active {
+    @apply bg-medium-green text-white;
+  }
+  
+  .vote-btn-downvote {
+    @apply hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400;
+  }
+  
+  .vote-btn-downvote-active {
+    @apply bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400;
+  }
+  
+  /* Loading animations - subtle like Medium */
   .loading-skeleton {
-    @apply bg-gray-200 dark:bg-gray-700 animate-pulse;
-  }
-  
-  .loading-dots {
-    @apply flex space-x-1;
-  }
-  
-  .loading-dots > div {
-    @apply w-2 h-2 bg-current rounded-full animate-bounce;
-  }
-  
-  .loading-dots > div:nth-child(1) {
-    animation-delay: -0.32s;
-  }
-  
-  .loading-dots > div:nth-child(2) {
-    animation-delay: -0.16s;
+    @apply bg-gray-100 dark:bg-gray-800 animate-pulse;
   }
   
   .loading-spinner {
-    @apply animate-spin rounded-full border-2 border-gray-300 dark:border-gray-600 border-t-primary-600;
+    @apply animate-spin rounded-full border-2 border-gray-200 dark:border-gray-700 border-t-medium-green;
+  }
+  
+  /* Medium-inspired badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply bg-medium-bg-gray dark:bg-dark-bg-gray text-medium-text-light dark:text-dark-text-light;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400;
+  }
+  
+  .badge-error {
+    @apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400;
   }
 }
 
-/* TipTap Editor Styles */
+/* TipTap Editor Styles - Medium writing experience */
 .ProseMirror {
-  @apply min-h-[200px] p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:focus:border-primary-500;
-  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
-  @apply transition-all duration-200 ease-in-out;
+  @apply min-h-[300px] p-6 border border-gray-200 dark:border-gray-700 rounded-lg;
+  @apply focus:ring-2 focus:ring-medium-green focus:border-medium-green dark:focus:border-medium-green;
+  @apply bg-white dark:bg-dark-bg-light text-medium-text dark:text-dark-text;
+  @apply transition-all duration-150 ease-in-out;
+  font-family: 'Source Serif Pro', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.58;
+  letter-spacing: -0.003em;
 }
 
 .ProseMirror:focus {
@@ -126,39 +248,59 @@
 }
 
 .ProseMirror p {
-  @apply mb-2;
+  @apply mb-4;
+  font-size: 18px;
+  line-height: 1.58;
+  color: #242424;
+  @apply dark:text-dark-text;
 }
 
 .ProseMirror h1 {
-  @apply text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100;
+  @apply text-3xl font-bold mb-6 text-medium-text dark:text-dark-text;
+  font-family: 'Source Serif Pro', Georgia, serif;
+  line-height: 1.22;
 }
 
 .ProseMirror h2 {
-  @apply text-xl font-bold mb-3 text-gray-900 dark:text-gray-100;
+  @apply text-2xl font-bold mb-5 text-medium-text dark:text-dark-text;
+  font-family: 'Source Serif Pro', Georgia, serif;
+  line-height: 1.22;
 }
 
 .ProseMirror h3 {
-  @apply text-lg font-bold mb-2 text-gray-900 dark:text-gray-100;
+  @apply text-xl font-bold mb-4 text-medium-text dark:text-dark-text;
+  font-family: 'Source Serif Pro', Georgia, serif;
+  line-height: 1.22;
 }
 
 .ProseMirror ul {
-  @apply list-disc list-inside mb-2;
+  @apply list-disc list-inside mb-4 pl-6;
 }
 
 .ProseMirror ol {
-  @apply list-decimal list-inside mb-2;
+  @apply list-decimal list-inside mb-4 pl-6;
+}
+
+.ProseMirror li {
+  @apply mb-2;
+  font-size: 18px;
+  line-height: 1.58;
 }
 
 .ProseMirror blockquote {
-  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400;
+  @apply border-l-4 border-gray-200 dark:border-gray-700 pl-6 italic text-medium-text-light dark:text-dark-text-light;
+  @apply mb-4;
+  font-size: 18px;
+  line-height: 1.58;
 }
 
 .ProseMirror code {
-  @apply bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-gray-900 dark:text-gray-100;
+  @apply bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm font-mono;
+  @apply text-medium-text dark:text-dark-text;
 }
 
 .ProseMirror pre {
-  @apply bg-gray-100 dark:bg-gray-700 p-4 rounded-lg overflow-x-auto;
+  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4;
 }
 
 .ProseMirror pre code {
@@ -166,55 +308,111 @@
 }
 
 .ProseMirror a {
-  @apply text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 underline;
+  @apply text-medium-green hover:text-medium-green-dark dark:text-primary-400 dark:hover:text-primary-300;
+  @apply underline transition-colors duration-150;
 }
 
 .ProseMirror img {
-  @apply max-w-full h-auto rounded shadow-soft;
+  @apply max-w-full h-auto rounded shadow-card my-4;
 }
 
-/* Mention styles */
-.mention {
-  @apply bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 px-1 py-0.5 rounded text-sm font-medium;
+/* Medium-inspired separator */
+.separator {
+  @apply w-16 h-px bg-gray-200 dark:bg-gray-700 my-8 mx-auto;
 }
 
-/* Custom utilities */
-.line-clamp-1 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
+/* Medium-inspired link styles */
+.link {
+  @apply text-medium-green hover:text-medium-green-dark dark:text-primary-400 dark:hover:text-primary-300;
+  @apply transition-colors duration-150;
 }
 
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.link-subtle {
+  @apply text-medium-text-light dark:text-dark-text-light hover:text-medium-text dark:hover:text-dark-text;
+  @apply transition-colors duration-150;
 }
 
-.line-clamp-3 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+/* Medium-inspired stats */
+.stat-item {
+  @apply flex items-center space-x-1 text-medium-text-light dark:text-dark-text-light;
+  font-size: 14px;
 }
 
-/* Smooth page transitions */
-.page-transition {
-  @apply animate-fade-in-up;
+.stat-item.active {
+  @apply text-medium-green dark:text-primary-400;
 }
 
-/* Focus visible improvements */
+/* Medium-inspired dividers */
+.divider {
+  @apply border-t border-gray-200 dark:border-gray-700 my-6;
+}
+
+.divider-light {
+  @apply border-t border-gray-100 dark:border-gray-800 my-4;
+}
+
+/* Medium-inspired focus states */
 .focus-visible {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  @apply focus:outline-none focus:ring-2 focus:ring-medium-green focus:ring-offset-2 dark:focus:ring-offset-dark-bg;
 }
 
-/* Hover effects for interactive elements */
+/* Medium-inspired hover states */
 .hover-lift {
-  @apply transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-medium;
+  @apply hover:shadow-card-hover transition-shadow duration-150;
 }
 
-.hover-glow {
-  @apply transition-all duration-200 ease-in-out hover:shadow-glow;
+.hover-bg {
+  @apply hover:bg-medium-bg-light dark:hover:bg-dark-bg-light transition-colors duration-150;
+}
+
+/* Medium-inspired text utilities */
+.text-reading {
+  font-size: 18px;
+  line-height: 1.58;
+  letter-spacing: -0.003em;
+}
+
+.text-caption {
+  font-size: 14px;
+  line-height: 1.4;
+  @apply text-medium-text-light dark:text-dark-text-light;
+}
+
+.text-overline {
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  @apply text-medium-text-lighter dark:text-dark-text-lighter;
+}
+
+/* Medium-inspired responsive utilities */
+@media (max-width: 640px) {
+  .content-container,
+  .article-container,
+  .wide-container {
+    @apply px-4;
+  }
+  
+  .ProseMirror {
+    font-size: 16px;
+  }
+  
+  .ProseMirror p,
+  .ProseMirror li {
+    font-size: 16px;
+  }
+  
+  h1 {
+    @apply text-2xl;
+  }
+  
+  h2 {
+    @apply text-xl;
+  }
+  
+  h3 {
+    @apply text-lg;
+  }
 }

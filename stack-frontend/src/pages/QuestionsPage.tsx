@@ -15,6 +15,7 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Pagination } from '../components/Pagination';
 import type { Question, QuestionFilters } from '../types';
 import apiService from '../services/api';
 
@@ -126,6 +127,10 @@ export const QuestionsPage = () => {
 
   const handleSearchChange = (search: string) => {
     setFilters(prev => ({ ...prev, search, page: 1 }));
+  };
+
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    setFilters(prev => ({ ...prev, limit: itemsPerPage, page: 1 }));
   };
 
   const formatDate = (dateString: string) => {
@@ -391,38 +396,19 @@ export const QuestionsPage = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-            <button
-              onClick={() => handlePageChange(Math.max(1, filters.page! - 1))}
-              disabled={filters.page === 1}
-              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                  filters.page === page
-                    ? 'z-10 bg-primary-50 dark:bg-primary-900 border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            
-            <button
-              onClick={() => handlePageChange(Math.min(totalPages, filters.page! + 1))}
-              disabled={filters.page === totalPages}
-              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </nav>
+        <div className="mt-8">
+          <Pagination
+            currentPage={filters.page || 1}
+            totalPages={totalPages}
+            totalItems={totalQuestions}
+            itemsPerPage={filters.limit || 20}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            itemName="question"
+            itemNamePlural="questions"
+            showGoToPage={totalPages > 5}
+            itemsPerPageOptions={[10, 20, 50, 100]}
+          />
         </div>
       )}
     </div>

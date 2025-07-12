@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageSquare, Eye, ThumbsUp, Clock, Tag as TagIcon, TrendingUp, Users, Sparkles } from 'lucide-react';
+import { Pagination } from '../components/Pagination';
 import type { Question, QuestionFilters } from '../types';
 import apiService from '../services/api';
 
@@ -12,6 +13,8 @@ export const HomePage = () => {
     page: 1,
     limit: 20,
   });
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchQuestions();
@@ -25,19 +28,28 @@ export const HomePage = () => {
       
       // Handle different response formats
       let questionsData: Question[] = [];
+      let total = 0;
+      let totalPagesCount = 0;
+      
       if (response.data) {
         // Cast to any to handle different response formats from backend
         const responseData = response.data as any;
         
         if (Array.isArray(responseData.data)) {
-          // Format: { data: { data: [...] } }
+          // Format: { data: { data: [...], total: number, totalPages: number } }
           questionsData = responseData.data;
+          total = responseData.total || 0;
+          totalPagesCount = responseData.totalPages || 0;
         } else if (Array.isArray(responseData.questions)) {
           // Format: { data: { questions: [...] } }
           questionsData = responseData.questions;
+          total = responseData.total || questionsData.length;
+          totalPagesCount = Math.ceil(total / (filters.limit || 20));
         } else if (Array.isArray(responseData)) {
           // Format: { data: [...] }
           questionsData = responseData;
+          total = questionsData.length;
+          totalPagesCount = 1;
         }
       }
       
@@ -66,9 +78,13 @@ export const HomePage = () => {
       });
       
       setQuestions(cleanedQuestions);
+      setTotalQuestions(total);
+      setTotalPages(totalPagesCount);
     } catch (error) {
       console.error('Failed to fetch questions:', error);
       setQuestions([]);
+      setTotalQuestions(0);
+      setTotalPages(0);
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +92,15 @@ export const HomePage = () => {
 
   const handleSortChange = (sort: QuestionFilters['sort']) => {
     setFilters(prev => ({ ...prev, sort, page: 1 }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters(prev => ({ ...prev, page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    setFilters({ ...filters, limit: itemsPerPage, page: 1 });
   };
 
   const formatDate = (dateString: string) => {
@@ -166,7 +191,7 @@ export const HomePage = () => {
             <MessageSquare className="w-6 h-6 text-primary-600 dark:text-primary-400" />
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {questions.length}
+            {totalQuestions || questions.length}
           </h3>
           <p className="text-gray-600 dark:text-gray-400">Questions</p>
         </div>
@@ -315,6 +340,24 @@ export const HomePage = () => {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <Pagination
+            currentPage={filters.page || 1}
+            totalPages={totalPages}
+            totalItems={totalQuestions}
+            itemsPerPage={filters.limit || 20}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            itemName="question"
+            itemNamePlural="questions"
+            showGoToPage={totalPages > 5}
+            itemsPerPageOptions={[10, 20, 50, 100]}
+          />
+        </div>
+      )}
 
       {questions.length === 0 && !isLoading && (
         <div className="text-center py-16 animate-fade-in-up">

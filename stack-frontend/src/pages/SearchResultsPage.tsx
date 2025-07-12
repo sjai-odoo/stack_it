@@ -14,6 +14,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Pagination } from '../components/Pagination';
 import type { Question, QuestionFilters } from '../types';
 import apiService from '../services/api';
 
@@ -86,6 +87,17 @@ export const SearchResultsPage = () => {
     if (!selectedTags.includes(tag)) {
       setSelectedTags(prev => [...prev, tag]);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    setCurrentPage(1);
+    // Note: This would typically update the API call with new limit
+    // For now, we'll just reset to page 1
   };
 
   const formatDate = (dateString: string) => {
@@ -432,41 +444,19 @@ export const SearchResultsPage = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-12">
-          <nav className="flex space-x-2">
-            {currentPage > 1 && (
-              <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                className="btn btn-secondary"
-              >
-                Previous
-              </button>
-            )}
-            
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              const pageNumber = Math.max(1, currentPage - 2) + i;
-              if (pageNumber > totalPages) return null;
-              
-              return (
-                <button
-                  key={pageNumber}
-                  onClick={() => setCurrentPage(pageNumber)}
-                  className={`btn ${pageNumber === currentPage ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  {pageNumber}
-                </button>
-              );
-            })}
-            
-            {currentPage < totalPages && (
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                className="btn btn-secondary"
-              >
-                Next
-              </button>
-            )}
-          </nav>
+        <div className="mt-12">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalResults}
+            itemsPerPage={20}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            itemName="result"
+            itemNamePlural="results"
+            showGoToPage={totalPages > 5}
+            itemsPerPageOptions={[10, 20, 50, 100]}
+          />
         </div>
       )}
     </div>

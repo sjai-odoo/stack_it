@@ -10,9 +10,7 @@ import {
   Clock, 
   User, 
   Award, 
-  Edit3,
   Flag,
-  Share2,
   Bookmark,
   BookmarkCheck,
   CheckCircle
@@ -20,6 +18,8 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { Pagination } from '../components/Pagination';
+import { ShareDropdown } from '../components/ShareDropdown';
 import type { Question, Answer, Comment } from '../types';
 import apiService from '../services/api';
 
@@ -37,6 +37,13 @@ export const QuestionDetailPage = () => {
   const [commentContent, setCommentContent] = useState('');
   const [activeCommentForm, setActiveCommentForm] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  // Pagination state
+  const [answersPagination, setAnswersPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 10,
+  });
   
   // Vote tracking
   const [userVotes, setUserVotes] = useState<{
@@ -102,6 +109,7 @@ export const QuestionDetailPage = () => {
             comments: answer.comments || []
           };
         }) : [],
+        comments: questionData.comments || [],
         createdAt: questionData.createdAt || new Date().toISOString(),
         updatedAt: questionData.updatedAt || new Date().toISOString(),
         isClosed: questionData.isClosed || false,
@@ -109,6 +117,24 @@ export const QuestionDetailPage = () => {
       
       setQuestion(cleanedQuestion);
       setAnswers(cleanedQuestion.answers);
+      
+      // Collect all comments from question and answers
+      const allComments: Comment[] = [];
+      
+      // Add question comments if they exist
+      if (cleanedQuestion.comments && Array.isArray(cleanedQuestion.comments)) {
+        allComments.push(...cleanedQuestion.comments);
+      }
+      
+      // Add answer comments
+      cleanedQuestion.answers.forEach(answer => {
+        if (answer.comments && Array.isArray(answer.comments)) {
+          allComments.push(...answer.comments);
+        }
+      });
+      
+      setComments(allComments);
+      
       // Simulate bookmark status
       setIsBookmarked(Math.random() > 0.5);
     } catch (error) {
@@ -119,7 +145,7 @@ export const QuestionDetailPage = () => {
     }
   };
 
-  const handleVote = async (type: 'up' | 'down', targetType: 'question' | 'answer', targetId: string) => {
+  const handleVote = async (type: 'up' | 'down', targetType: 'question' | 'answer' | 'comment', targetId: string) => {
     if (!user) {
       navigate('/login');
       return;
@@ -159,8 +185,10 @@ export const QuestionDetailPage = () => {
         
         if (targetType === 'question') {
           await apiService.voteQuestion(targetId, voteValue);
-        } else {
+        } else if (targetType === 'answer') {
           await apiService.voteAnswer(targetId, voteValue);
+        } else if (targetType === 'comment') {
+          await apiService.voteComment(targetId, voteValue);
         }
       }
       
@@ -173,7 +201,7 @@ export const QuestionDetailPage = () => {
           });
         }
         setUserVotes(prev => ({ ...prev, question: newVoteState }));
-      } else {
+      } else if (targetType === 'answer') {
         setAnswers(prev => prev.map(answer => 
           answer.id === targetId 
             ? { ...answer, votes: answer.votes + voteChange }
@@ -183,12 +211,21 @@ export const QuestionDetailPage = () => {
           ...prev,
           answers: { ...prev.answers, [targetId]: newVoteState }
         }));
+      } else if (targetType === 'comment') {
+        setComments(prev => prev.map(comment => 
+          comment.id === targetId 
+            ? { ...comment, votes: comment.votes + voteChange }
+            : comment
+        ));
       }
     } catch (error) {
       console.error('Vote failed:', error);
       // Show user-friendly error
       const errorMessage = error instanceof Error ? error.message : 'Failed to vote. Please try again.';
-      alert(errorMessage);
+      setError(errorMessage);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(''), 5000);
     } finally {
       setVotingStates(prev => ({ ...prev, [voteKey]: false }));
     }
@@ -263,8 +300,16 @@ export const QuestionDetailPage = () => {
       setComments(prev => [...prev, response.data]);
       setCommentContent('');
       setActiveCommentForm(null);
+      
+      // Show success feedback
+      setError('');
+      setSuccessMessage('Comment posted successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Failed to submit comment:', error);
+      setError('Failed to post comment. Please try again.');
+      setSuccessMessage('');
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -306,10 +351,14 @@ export const QuestionDetailPage = () => {
       // Update question state
       setQuestion(prev => prev ? { ...prev, acceptedAnswerId: answerId } : null);
       
+      // Show success message
+      setSuccessMessage('Answer accepted successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
       console.log('Answer accepted successfully');
     } catch (error) {
       console.error('Failed to accept answer:', error);
-      alert('Failed to accept answer. Please try again.');
+      setError('Failed to accept answer. Please try again.');
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -323,6 +372,27 @@ export const QuestionDetailPage = () => {
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
     return date.toLocaleDateString();
   };
+
+  // Pagination handlers
+  const handleAnswersPageChange = (page: number) => {
+    setAnswersPagination(prev => ({ ...prev, currentPage: page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAnswersItemsPerPageChange = (itemsPerPage: number) => {
+    setAnswersPagination({ currentPage: 1, itemsPerPage });
+  };
+
+
+
+  // Paginated data
+  const paginatedAnswers = answers.slice(
+    (answersPagination.currentPage - 1) * answersPagination.itemsPerPage,
+    answersPagination.currentPage * answersPagination.itemsPerPage
+  );
+
+  // Calculate total pages
+  const answersTotalPages = Math.ceil(answers.length / answersPagination.itemsPerPage);
 
   if (isLoading) {
     return (
@@ -362,6 +432,24 @@ export const QuestionDetailPage = () => {
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Questions
       </button>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <div className="text-red-600 dark:text-red-400 text-sm">
+            {error}
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+          <div className="text-green-600 dark:text-green-400 text-sm">
+            {successMessage}
+          </div>
+        </div>
+      )}
 
       {/* Question */}
       <div className="card p-8 mb-8 animate-fade-in-up">
@@ -438,17 +526,30 @@ export const QuestionDetailPage = () => {
             {/* Actions */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <button className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
-                  <Share2 className="w-4 h-4" />
-                  <span>Share</span>
-                </button>
-                <button className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
-                  <Edit3 className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
+                <ShareDropdown
+                  url={`${window.location.origin}/questions/${question.id}`}
+                  title={question.title}
+                  description={`Check out this question: ${question.title}`}
+                  onSuccess={(message) => {
+                    setSuccessMessage(message);
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }}
+                  onError={(error) => {
+                    setError(error);
+                    setTimeout(() => setError(''), 5000);
+                  }}
+                />
+
                 <button className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
                   <Flag className="w-4 h-4" />
                   <span>Flag</span>
+                </button>
+                <button 
+                  onClick={() => setActiveCommentForm(question.id)}
+                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Add Comment</span>
                 </button>
               </div>
 
@@ -479,6 +580,83 @@ export const QuestionDetailPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Question Comments */}
+            {comments.filter(comment => comment.questionId === question.id).length > 0 && (
+              <div className="mt-6 space-y-3">
+                {comments
+                  .filter(comment => comment.questionId === question.id)
+                  .map((comment) => (
+                    <div key={comment.id} className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                            {comment.content}
+                          </p>
+                          <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span>by</span>
+                            <Link
+                              to={`/users/${comment.author.id}`}
+                              className="font-medium text-primary-600 dark:text-primary-400 hover:underline"
+                            >
+                              {comment.author.username}
+                            </Link>
+                            <span>•</span>
+                            <span>{formatDate(comment.createdAt)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1 text-xs">
+                          <button
+                            onClick={() => handleVote('up', 'comment', comment.id)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            title="Upvote comment"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {comment.votes || 0}
+                          </span>
+                          <button
+                            onClick={() => handleVote('down', 'comment', comment.id)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            title="Downvote comment"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {/* Question Comment Form */}
+            {activeCommentForm === question.id && (
+              <form 
+                onSubmit={(e) => handleSubmitComment(e, question.id, 'question')}
+                className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                <textarea
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="textarea mb-3"
+                  rows={3}
+                />
+                <div className="flex space-x-2">
+                  <button type="submit" className="btn btn-primary btn-sm">
+                    Add Comment
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveCommentForm(null)}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -490,11 +668,12 @@ export const QuestionDetailPage = () => {
         </h2>
         
         <div className="space-y-6">
-          {answers.map((answer, index) => (
+          {paginatedAnswers.map((answer, index) => (
             <div 
               key={answer.id} 
+              id={`answer-${answer.id}`}
               className={`card p-6 animate-fade-in-up ${answer.isAccepted ? 'ring-2 ring-green-500 dark:ring-green-400' : ''}`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              style={{ animationDelay: `${index * 100}ms`, scrollMarginTop: '100px' }}
             >
               <div className="flex space-x-6">
                 {/* Voting */}
@@ -565,12 +744,20 @@ export const QuestionDetailPage = () => {
                   {/* Answer Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <button className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
-                        Share
-                      </button>
-                      <button className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
-                        Edit
-                      </button>
+                      <ShareDropdown
+                        url={`${window.location.origin}/questions/${question.id}#answer-${answer.id}`}
+                        title={`Answer to: ${question.title}`}
+                        description={`Check out this answer to: ${question.title}`}
+                        onSuccess={(message) => {
+                          setSuccessMessage(message);
+                          setTimeout(() => setSuccessMessage(''), 3000);
+                        }}
+                        onError={(error) => {
+                          setError(error);
+                          setTimeout(() => setError(''), 5000);
+                        }}
+                      />
+
                       <button 
                         onClick={() => setActiveCommentForm(answer.id)}
                         className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
@@ -607,6 +794,55 @@ export const QuestionDetailPage = () => {
                     </div>
                   </div>
 
+                  {/* Existing Comments */}
+                  {comments.filter(comment => comment.answerId === answer.id).length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {comments
+                        .filter(comment => comment.answerId === answer.id)
+                        .map((comment) => (
+                          <div key={comment.id} className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                                  {comment.content}
+                                </p>
+                                <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <span>by</span>
+                                  <Link
+                                    to={`/users/${comment.author.id}`}
+                                    className="font-medium text-primary-600 dark:text-primary-400 hover:underline"
+                                  >
+                                    {comment.author.username}
+                                  </Link>
+                                  <span>•</span>
+                                  <span>{formatDate(comment.createdAt)}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <button
+                                  onClick={() => handleVote('up', 'comment', comment.id)}
+                                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                  title="Upvote comment"
+                                >
+                                  <ChevronUp className="w-4 h-4" />
+                                </button>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  {comment.votes || 0}
+                                </span>
+                                <button
+                                  onClick={() => handleVote('down', 'comment', comment.id)}
+                                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                  title="Downvote comment"
+                                >
+                                  <ChevronDown className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
                   {/* Comment Form */}
                   {activeCommentForm === answer.id && (
                     <form 
@@ -639,6 +875,24 @@ export const QuestionDetailPage = () => {
             </div>
           ))}
         </div>
+        
+        {/* Answers Pagination */}
+        {answers.length > 0 && (
+          <div className="mt-8">
+            <Pagination
+              currentPage={answersPagination.currentPage}
+              totalPages={answersTotalPages}
+              totalItems={answers.length}
+              itemsPerPage={answersPagination.itemsPerPage}
+              onPageChange={handleAnswersPageChange}
+              onItemsPerPageChange={handleAnswersItemsPerPageChange}
+              itemName="answer"
+              itemNamePlural="answers"
+              showGoToPage={answersTotalPages > 5}
+              itemsPerPageOptions={[5, 10, 20, 50]}
+            />
+          </div>
+        )}
       </div>
 
       {/* Answer Form */}

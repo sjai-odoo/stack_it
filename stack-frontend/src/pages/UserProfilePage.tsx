@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Pagination } from '../components/Pagination';
 import type { User as UserType, Question } from '../types';
 import apiService from '../services/api';
 
@@ -32,6 +33,16 @@ export const UserProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'answers' | 'activity'>('overview');
   const [error, setError] = useState('');
+  
+  // Pagination state
+  const [questionsPagination, setQuestionsPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 10,
+  });
+  const [answersPagination, setAnswersPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 10,
+  });
 
   useEffect(() => {
     if (id) {
@@ -44,14 +55,19 @@ export const UserProfilePage = () => {
       setIsLoading(true);
       setError('');
       
-      const [userResponse, questionsResponse] = await Promise.all([
-        apiService.getUser(id!),
-        apiService.getQuestions({ /* author: id! */ }) // This would need to be implemented in the API
-      ]);
-      
+      // Try to get user first
+      const userResponse = await apiService.getUser(id!);
       setUser(userResponse.data);
-      // Filter questions by author (this would be done by the API in a real app)
-      setUserQuestions(questionsResponse.data.data.filter(q => q.author.id === id));
+      
+      // Then get questions
+      try {
+        const questionsResponse = await apiService.getQuestions({});
+        // Filter questions by author (this would be done by the API in a real app)
+        setUserQuestions(questionsResponse.data.data?.filter(q => q.author?.id === id) || []);
+      } catch (questionsError) {
+        console.warn('Failed to fetch user questions:', questionsError);
+        setUserQuestions([]);
+      }
       
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
@@ -86,6 +102,40 @@ export const UserProfilePage = () => {
   };
 
   const isOwnProfile = currentUser?.id === id;
+
+  // Pagination handlers
+  const handleQuestionsPageChange = (page: number) => {
+    setQuestionsPagination(prev => ({ ...prev, currentPage: page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleQuestionsItemsPerPageChange = (itemsPerPage: number) => {
+    setQuestionsPagination({ currentPage: 1, itemsPerPage });
+  };
+
+  const handleAnswersPageChange = (page: number) => {
+    setAnswersPagination(prev => ({ ...prev, currentPage: page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAnswersItemsPerPageChange = (itemsPerPage: number) => {
+    setAnswersPagination({ currentPage: 1, itemsPerPage });
+  };
+
+  // Paginated data
+  const paginatedQuestions = userQuestions.slice(
+    (questionsPagination.currentPage - 1) * questionsPagination.itemsPerPage,
+    questionsPagination.currentPage * questionsPagination.itemsPerPage
+  );
+
+  const paginatedAnswers = userAnswers.slice(
+    (answersPagination.currentPage - 1) * answersPagination.itemsPerPage,
+    answersPagination.currentPage * answersPagination.itemsPerPage
+  );
+
+  // Calculate total pages
+  const questionsTotalPages = Math.ceil(userQuestions.length / questionsPagination.itemsPerPage);
+  const answersTotalPages = Math.ceil(userAnswers.length / answersPagination.itemsPerPage);
 
   if (isLoading) {
     return (
@@ -333,45 +383,67 @@ export const UserProfilePage = () => {
                   </p>
                 </div>
               ) : (
-                userQuestions.map((question, index) => (
-                  <div key={question.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
-                    <div className="flex space-x-4">
-                      <div className="flex flex-col items-center space-y-2 min-w-[60px]">
-                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                          {question.votes || 0} votes
-                        </div>
-                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                          {question.answers?.length || 0} answers
-                        </div>
-                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                          {question.views || 0} views
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <Link
-                          to={`/questions/${question.id}`}
-                          className="text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
-                        >
-                          {question.title}
-                        </Link>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {question.tags.map(tag => (
+                <>
+                  <div className="space-y-4">
+                    {paginatedQuestions.map((question, index) => (
+                      <div key={question.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+                        <div className="flex space-x-4">
+                          <div className="flex flex-col items-center space-y-2 min-w-[60px]">
+                            <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                              {question.votes || 0} votes
+                            </div>
+                            <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                              {question.answers?.length || 0} answers
+                            </div>
+                            <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                              {question.views || 0} views
+                            </div>
+                          </div>
+                          <div className="flex-1">
                             <Link
-                              key={tag.id}
-                              to={`/tags/${tag.name}`}
-                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors duration-200"
+                              to={`/questions/${question.id}`}
+                              className="text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                             >
-                              {tag.name}
+                              {question.title}
                             </Link>
-                          ))}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                          Asked {formatDate(question.createdAt)}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {question.tags.map(tag => (
+                                <Link
+                                  key={tag.id}
+                                  to={`/tags/${tag.name}`}
+                                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors duration-200"
+                                >
+                                  {tag.name}
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                              Asked {formatDate(question.createdAt)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))
+
+                  {/* Questions Pagination */}
+                  {userQuestions.length > 0 && (
+                    <div className="mt-6">
+                      <Pagination
+                        currentPage={questionsPagination.currentPage}
+                        totalPages={questionsTotalPages}
+                        totalItems={userQuestions.length}
+                        itemsPerPage={questionsPagination.itemsPerPage}
+                        onPageChange={handleQuestionsPageChange}
+                        onItemsPerPageChange={handleQuestionsItemsPerPageChange}
+                        itemName="question"
+                        itemNamePlural="questions"
+                        showGoToPage={questionsTotalPages > 5}
+                        itemsPerPageOptions={[5, 10, 20, 50]}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
